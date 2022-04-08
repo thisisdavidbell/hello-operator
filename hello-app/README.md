@@ -76,10 +76,10 @@ A simple helper [Makefile](Makefile) is provided covering a number of commands m
 ## 7. Push your application to an image registry
 
 Ensure you ahev set env vars:
-- IRHOSTNAME - Image registry Hostname
-- IRNAMESPACE - Namespace in image registry
-- IRUSER - Image registry user name
-- IRPASSWORD - Image resgiry password
+- `IRHOSTNAME` - Image registry Hostname
+- `IRNAMESPACE` - Namespace in image registry
+- `IRUSER` - Image registry user name
+- `IRPASSWORD` - Image resgiry password
 
 Run:
 - `docker login -u $IRUSER -p $IRPASSWORD $IRHOSTNAME`
@@ -115,3 +115,5 @@ For Container images, (and OCP 4.8), the process was:
 - You should see your go app output in the new tab.
 
 Congratulations, you have just run your app as a deployment in Red Hat OpenShift.
+
+**TODO**: write up the deployment, service and route yaml files, to show exactly what is defined.
