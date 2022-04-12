@@ -22,16 +22,19 @@ Note: it was created using operator sdk 0.18.2, which is no longer in support. T
 - docker or podman
 - Red Hat Openshift Container Platform: 4.6+
 
-- Important Notes:
+### Important Notes:
   -  if using Visual Studio Code: 
         - gopls language server expects either the go.mod file to be in the root of the workspace, or for you to open the dorectory containing your code and the go.mod file. This hello-operator repo is not setup like that, so you may need to open the hello-operator directly itself in a new go workspace for VS Code to work correctly, for example not present errors in main.go after step 1, such as:
 ```
 could not import k8s.io.... (cannot find package...)
 ```
-See: https://github.com/golang/tools/blob/master/gopls/doc/workspace.md
+    - All operator-sdk commands will need to be run from a new VS workspace based on the `operator-sdk-0.18` dir
+    - See: https://github.com/golang/tools/blob/master/gopls/doc/workspace.md
+
+
   - vendor directory
     - the vendor directory has been added to the .gitignore dir.
-    - if cloning this repo, run `go mod vendor` and not the vendor directory is created and populated. 
+    - if cloning this repo, run `go mod vendor` and note the vendor directory is created and populated. 
 
 
 Hopefully for the more up to date operator with a 1.18+ go version, the workspace can be made to work correctly with go.work files.
@@ -101,9 +104,110 @@ View the new code in:
 
 # 3. Update the Hello model
 
-NEXT: make some additions to the model, to allow demonstration of openapi schema validation, webhook, operator consuming and applying values from cr, etc...
+In order to demonstrate various functionality of an operator, we will have 3 items in the spec:
 
+spec:
+- version - string - which hello image tag to deploy
+- repeat - int - how many time to say hello
+- verbose - bool - whether to include second line of text in output
+
+We may add a status field later.
+
+a. To do this, update `pkg/apis/thisisdavidbell/v1alpha1/hello_types.go` to look like:
+
+```
+type HelloSpec struct {
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+
+	// Version - what version of hello to use - this is the hello image tag to use
+	Version string `json:"version"`
+
+	// Repeat - how many times to say hello
+	Repeat int32 `json:"repeat"`
+
+	// Verbose - whether to output additional line of text
+	Verbose bool `json:"verbose"`
+}
+```
+
+Note if you pushed your changes to git previously, you now only have the _types file changed:
+
+```
+$ git status
+
+...
+$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   hello-operator/pkg/apis/thisisdavidbell/v1alpha1/hello_types.go
 ---
+
+b. Add OpenApiV3Schema validation
+Follow the link in the _types comment to view the supported OpenApiV3Schema validation that can be applied, using the kubebuilder annotations. Add appropriate validation. (Later we may add a full ValidatingWebhook for more control). E.g.:
+```
+type HelloSpec struct {
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+
+	// Version - what version of hello to use - this is the hello image tag to use
+	// +kubebuilder:validation:MaxLength=10
+	// +kubebuilder:validation:MinLength=2
+	Version string `json:"version"`
+
+	// Repeat - how many times to say hello
+	// +kubebuilder:validation:Maximum=5
+	// +kubebuilder:validation:Minimum=1
+	Repeat int32 `json:"repeat"`
+
+	// Verbose - whether to output additional line of text
+	Verbose bool `json:"verbose"`
+}
+```
+
+c. Update the generated code:
+
+```
+operator-sdk generate k8s
+```
+
+Note that this appears to cause not changes at this point:
+
+c. Update the crd:
+
+```
+operator-sdk generate k8s
+```
+
+Note the crd gets updated to include these new types
+
+d. Manually update cr 
+
+ToDo: should this get automatically updated, or is there a command to do it?
+
+Updated cr to be:
+```
+apiVersion: thisisdavidbell.example.com/v1alpha1
+kind: Hello
+metadata:
+  name: example-hello
+spec:
+  # Add fields here
+  version: "v1.0"
+  repeat: 1
+  verbose: true
+```
+
+e. Add a new controller to watch and reconcile the Hello resource
+
+
+
 
 # Appendix
 

@@ -30,6 +30,26 @@ spec:
             type: object
           spec:
             description: HelloSpec defines the desired state of Hello
+            properties:
+              repeat:
+                description: Repeat - how many times to say hello
+                format: int32
+                maximum: 5
+                minimum: 1
+                type: integer
+              verbose:
+                description: Verbose - whether to output additional line of text
+                type: boolean
+              version:
+                description: Version - what version of hello to use - this is the
+                  hello image tag to use
+                maxLength: 10
+                minLength: 2
+                type: string
+            required:
+            - repeat
+            - verbose
+            - version
             type: object
           status:
             description: HelloStatus defines the observed state of Hello

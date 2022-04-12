@@ -12,6 +12,19 @@ type HelloSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+
+	// Version - what version of hello to use - this is the hello image tag to use
+	// +kubebuilder:validation:MaxLength=10
+	// +kubebuilder:validation:MinLength=2
+	Version string `json:"version"`
+
+	// Repeat - how many times to say hello
+	// +kubebuilder:validation:Maximum=5
+	// +kubebuilder:validation:Minimum=1
+	Repeat int32 `json:"repeat"`
+
+	// Verbose - whether to output additional line of text
+	Verbose bool `json:"verbose"`
 }
 
 // HelloStatus defines the observed state of Hello
