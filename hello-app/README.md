@@ -75,7 +75,7 @@ A simple helper [Makefile](Makefile) is provided covering a number of commands m
 
 ## 7. Push your application to an image registry
 
-Ensure you ahev set env vars:
+Ensure you have set env vars:
 - `IRHOSTNAME` - Image registry Hostname
 - `IRNAMESPACE` - Namespace in image registry
 - `IRUSER` - Image registry user name
@@ -90,6 +90,7 @@ Run:
 
 - log into OCP console
 - Switch to Developer Perspective
+- Click +Add
 - Run you app using one of:
   - From git
   - From Dockerfile
