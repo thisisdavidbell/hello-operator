@@ -317,6 +317,12 @@ spec:
   wildcardPolicy: None
 ```
 
+# 10. Deploy cr
+
+```
+oc create -f deploy/crds/thisisdavidbell.example.com_v1alpha1_hello_cr.yaml
+```
+
 Test:
 
 In browser or curl, call:
@@ -324,10 +330,22 @@ In browser or curl, call:
 http://hello1.drb-hello-operator.apps.RESTOFCLUSTERHOSTNAME/hello
 ```
 
+Note if you set repeat to 10, for example, you will see the validation failure:
+
+```
+$ oc create -f deploy/crds/thisisdavidbell.example.com_v1alpha1_hello_cr.yaml  
+
+The Hello "example-hello" is invalid: spec.repeat: Invalid value: 10: spec.repeat in body should be less than or equal to 5
+
+---
+
 Next:
-- apply service to operator
+- look for better way to override internal registry in code. `kustomize`??
+- have hello use the repeat and verbose fields - use env vars and create a local file?
+- have operator apply version, repeat and verbose fields correctly.
+- convert to deployment following memcache example code here: https://docs.openshift.com/container-platform/4.6/operators/operator_sdk/osdk-getting-started.html
+- reconcile service in operator
 - repeat with new code for route
-- look for better way to override internal registry in code. `kustomize`?
 - tidy up docs
 - move onto olm
 

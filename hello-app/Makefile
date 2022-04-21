@@ -14,8 +14,8 @@ go-run:
 
 .PHONY: docker-build
 docker-build:
-	docker build -t hello:v1.0 .
+	docker build -t hello:v2.0 .
 
 .PHONY: docker-run
 docker-run:
-	docker run -p 8080:8080 -d hello:v1.0
+	docker run -p 8080:8080 -d hello:v2.0

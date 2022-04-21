@@ -8,14 +8,15 @@ In later chapters, this simple application will be the one managed by the operat
 
 - an OCP 4.4 or above cluster.
 - docker or podman
-- Set the following env vars:
-    - DOCKERHOSTNAME - the fully qualified hostname of your docker repo
-    - DOCKERNAMESPACE - the namespace within your docker repo where all images will be pushed.
-    - OCPHOSTNAME - the fully qualified hostname of your ocp system. (e.g. everything after `api.` or `apps.` )
 
 ## 1. Create Go app
 Create a simple go application, running a httpserver, returning a string.
 You can use the simple example here: [hello-ocp.go](hello-ocp.go)
+
+Note:
+ - there is a second commit containing the changes to create v2.0, which adds some functionality used later by the operator. This supports 2 env vars:
+   - VERBOSE - provide extra explanatory info about the hello app. 
+   - REPEAT - how many times to say hello
 
 ## 2. Test it
 In one terminal, run:
@@ -51,13 +52,16 @@ a. Write a Dockerfile to build and run your go application.
 
 b. Test the dockerfile:
 - Build the image
-`docker build -t hello:v1.0 .`
+`docker build -t hello:v2.0 .`
 
 - Confirm the image was created
 `docker images | grep hello`
 
 - Run the image locally:
-`docker run -p 8080:8080 -d hello:v1.0`
+`docker run -p 8080:8080 -d hello:v2.0`
+ 
+ or to test the additional behaviour:
+`docker run --env VERBOSE=true --env REPEAT=2 -p 8080:8080 -d hello:v2.0`
 
 - Confirm the container is running:
 `docker ps`
@@ -66,8 +70,8 @@ b. Test the dockerfile:
 `curl localhost:8080/hello`
 
 - Stop the container:
-`docker stop CONTAINER-ID`
- where `CONTAINER-ID` is the value shown when running `docker ps`
+`docker stop <CONTAINER-ID>`
+ where `<CONTAINER-ID>` is the value shown when running `docker ps`
 
 ## 6. Create a Makefile
 It is common to use Makefile's or similar technologies to group together the common commands used. 
@@ -83,8 +87,8 @@ Ensure you have set env vars:
 
 Run:
 - `docker login -u $IRUSER -p $IRPASSWORD $IRHOSTNAME`
-- `docker tag hello:v1.0 $IRHOSTNAME/$NAMESPACE/hello:v1.0`
-- `docker push $IRHOSTNAME/$NAMESPACE/hello:v1.0`
+- `docker tag hello:v2.0 $IRHOSTNAME/$IRNAMESPACE/hello:v2.0`
+- `docker push $IRHOSTNAME/$IRNAMESPACE/hello:v2.0`
 
 ## 8. Deploy your application in Red Hat OpenShift
 
