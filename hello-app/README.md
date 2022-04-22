@@ -76,6 +76,7 @@ b. Test the dockerfile:
 ## 6. Create a Makefile
 It is common to use Makefile's or similar technologies to group together the common commands used. 
 A simple helper [Makefile](Makefile) is provided covering a number of commands mentioned above, and introduced later.
+In the future, you should use these makefile commands to rebuild, as they handle keeping the version correct in all places from a single Makefile variable
 
 ## 7. Push your application to an image registry
 
@@ -90,6 +91,9 @@ Run:
 - `docker tag hello:v2.0 $IRHOSTNAME/$IRNAMESPACE/hello:v2.0`
 - `docker push $IRHOSTNAME/$IRNAMESPACE/hello:v2.0`
 
+Note:
+ - while it was valuable to see and run the commands themselves first time round, there are targets in the makefile to perform all these tasks in the future
+
 ## 8. Deploy your application in Red Hat OpenShift
 
 - log into OCP console
@@ -103,8 +107,8 @@ Run:
 For Container images, (and OCP 4.8), the process was:
 - Create new project/namespace
 - Click: From Container images
-- Click link to create image pull sceret if using secure registry
-- entire image 
+- Click link to create image pull secret if using secure image registry
+- enter full path to image, at the image registry you used
 - Leave defaults of `hello-app`, `hello`, deployment.
 - Select to create route
 - Expand advanced Routing options

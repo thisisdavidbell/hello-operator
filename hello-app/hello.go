@@ -15,7 +15,7 @@ var PATH = "/hello"
 
 func hello(w http.ResponseWriter, req *http.Request) {
 	helloName := "world"
-	version := "v2.0"
+	version := "SET_TO_APP_VERSION"
 
 	repeatStr := os.Getenv("REPEAT")
 	repeat := 1
