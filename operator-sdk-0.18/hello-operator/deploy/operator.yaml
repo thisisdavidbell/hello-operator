@@ -16,7 +16,7 @@ spec:
       containers:
         - name: hello-operator
           # Replace this with the built image name
-          image: example.com/drb/hello-operator:v0.0.1
+          image: SET_TO_IRHOSTNAME/SET_TO_IRNAMESPACE/hello-operator:SET_TO_OPERATOR_VERSION
           command:
           - hello-operator
           imagePullPolicy: Always

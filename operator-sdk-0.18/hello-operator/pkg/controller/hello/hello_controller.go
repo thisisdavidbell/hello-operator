@@ -144,7 +144,7 @@ func newPodForCR(cr *thisisdavidbellv1alpha1.Hello) *corev1.Pod {
 			Containers: []corev1.Container{
 				{
 					Name:    "hello",
-					Image:   "example.com/drb/hello:v1.0",
+					Image:   "SET_TO_IRHOSTNAME/SET_TO_IRNAMESPACE/hello:v2.0",
 					Command: []string{"./hello"},
 				},
 			},

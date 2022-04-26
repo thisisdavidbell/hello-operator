@@ -219,6 +219,8 @@ Note this adds the files `pkg/controller/add_hello.go` and `pkg/controller/hello
 
 f. Update the controller to use the correct image
 
+Update: a Makefile has now been added with targets which automatically sets the image to your image registry hostname and namespace and back again based on env vars, meaning you do not need to check these values into git. If you wish to do this, set the image as shown below (changing version tag if needed)
+
 Note: we may update this to use a deployment, as well as deploy the correct service and route later.
 
 ```
@@ -226,7 +228,7 @@ Note: we may update this to use a deployment, as well as deploy the correct serv
 			Containers: []corev1.Container{
 				{
 					Name:    "hello",
-					Image:   "example.com/drb/hello:v1.0",
+					Image:   "SET_TO_IRHOSTNAME/SET_TO_IRNAMESPACE/hello:v2.0",
 					Command: []string{"./hello"},
 				},
 			},
@@ -244,18 +246,30 @@ Ensure you have set env vars:
 - `IRUSER` - Image registry user name
 - `IRPASSWORD` - Image resgiry password
 
+To use the make targets (which includes updating the hello-app image hostname namespace), run:
+- `make build-and-push-operator`
+
+Alternatively, if you specified the actual image in hello_controller.go, run the commands individually:
+
 Run:
 - `docker login -u $IRUSER -p $IRPASSWORD $IRHOSTNAME`
 
 ```
-operator-sdk build $IRHOSTNAME/$NAMESPACE/hello-operator:v0.0.1
+operator-sdk build $IRHOSTNAME/$IRNAMESPACE/hello-operator:v0.0.1
 ```
 
 Push the image:
-- `docker push $IRHOSTNAME/$NAMESPACE/hello-operator:v0.0.1`
+- `docker push $IRHOSTNAME/$IRNAMESPACE/hello-operator:v0.0.1`
 
+ToDo: rebuilding the operator doesn't seem to update the operator version in version/version.go. Should this be manually updated 
 
-# 7. Register the crd
+# 7. Create or change to the desired project/namespace
+i.e.:
+- `oc project hello-operator-project`
+or
+- `oc new-project hello-operator-project`
+
+# 8. Register the crd
 
 ```
 kubectl create -f deploy/crds/thisisdavidbell.example.com_hellos_crd.yaml 
@@ -269,10 +283,12 @@ $ oc get hello
 No resources found in default namespace.
 ```
 
-# 8. Deploy operator
+# 9. Deploy operator
 
-Update image in operator.yaml to actual value of echo "$IRHOSTNAME/$NAMESPACE/hello-operator:v0.0.1"
-Note: example in git is incorrect
+You can now use the Makefile target `deploy-operator` to deploy the operator and other artifacts (including correctly setting the image registry):
+- `make deploy-operator`
+
+Alternatively, update image in operator.yaml to actual value of echo "$IRHOSTNAME/$NAMESPACE/hello-operator:v0.0.1"
 
 Then run:
 
@@ -282,9 +298,9 @@ oc create -f deploy/role_binding.yaml
 oc create -f deploy/operator.yaml
 ---
 
-# 9. Create Service and Route
+# 10. Create Service and Route
 
-Later we will get the oeprator to create the service and the route. For now manuallly create them.
+Later we will get the operator to create the service and the route. For now manuallly create them.
 
 Service:
 ```
@@ -317,7 +333,7 @@ spec:
   wildcardPolicy: None
 ```
 
-# 10. Deploy cr
+# 11. Deploy cr
 
 ```
 oc create -f deploy/crds/thisisdavidbell.example.com_v1alpha1_hello_cr.yaml
@@ -330,7 +346,8 @@ In browser or curl, call:
 http://hello1.drb-hello-operator.apps.RESTOFCLUSTERHOSTNAME/hello
 ```
 
-Note if you set repeat to 10, for example, you will see the validation failure:
+# 12. Confirm basic validation is working.
+If you set, for example, spec.repeat to 10 in the cr yaml, you will see the validation failure:
 
 ```
 $ oc create -f deploy/crds/thisisdavidbell.example.com_v1alpha1_hello_cr.yaml  
@@ -339,15 +356,23 @@ The Hello "example-hello" is invalid: spec.repeat: Invalid value: 10: spec.repea
 
 ---
 
+Done:
+- have hello use `REPEAT` and `VERBOSE` env vars
+- have hello app handle versioning nicely, including overriding value in go file
+- have hello app check for image registry env vars
+
 Next:
-- look for better way to override internal registry in code. `kustomize`??
-- have hello use the repeat and verbose fields - use env vars and create a local file?
+- look for better way to override internal registry in code. `kustomize`? Probably easier to just use sed in makefile (override before build, reset after  build even if build fails) for this simple case.
+- have hello use the repeat and verbose fields to set env vars
 - have operator apply version, repeat and verbose fields correctly.
 - convert to deployment following memcache example code here: https://docs.openshift.com/container-platform/4.6/operators/operator_sdk/osdk-getting-started.html
 - reconcile service in operator
 - repeat with new code for route
 - tidy up docs
 - move onto olm
+- have operator create a file instead of env var for one of verbose or repeat.
+
+
 
 # Appendix
 

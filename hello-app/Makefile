@@ -1,5 +1,5 @@
 
-#Make file to create and deploy hell-ocp
+# Makefile for hello-app
 
 version=v2.0
 
@@ -8,13 +8,13 @@ all: go-build docker-build
 
 .PHONY: set-app-version
 set-app-version:
-	sed 's/SET_TO_APP_VERSION/${version}/' hello.go > hello.tmp
-	mv hello.tmp hello.go
+	sed -i.tmp 's/SET_TO_APP_VERSION/${version}/' hello.go
+	rm hello.go.tmp
 
 .PHONY: reset-app-version
 reset-app-version:
-	sed 's/${version}/SET_TO_APP_VERSION/' hello.go > hello.tmp
-	mv hello.tmp hello.go
+	sed -i.tmp 's/${version}/SET_TO_APP_VERSION/' hello.go
+	rm hello.go.tmp
 
 .PHONY: go-build-as-is
 go-build-as-is:
