@@ -244,12 +244,12 @@ Ensure you have set env vars:
 - `IRHOSTNAME` - Image registry Hostname
 - `IRNAMESPACE` - Namespace in image registry
 - `IRUSER` - Image registry user name
-- `IRPASSWORD` - Image resgiry password
+- `IRPASSWORD` - Image registry password
 
-To use the make targets (which includes updating the hello-app image hostname namespace), run:
+To use the make target (which includes updating the hello-app image hostname and namespace in hello_controller.go), run:
 - `make build-and-push-operator`
 
-Alternatively, if you specified the actual image in hello_controller.go, run the commands individually:
+Alternatively, if you specified the actual image in hello_controller.go, you can run the commands individually:
 
 Run:
 - `docker login -u $IRUSER -p $IRPASSWORD $IRHOSTNAME`
@@ -287,6 +287,8 @@ No resources found in default namespace.
 
 You can now use the Makefile target `deploy-operator` to deploy the operator and other artifacts (including correctly setting the image registry):
 - `make deploy-operator`
+
+Note: if you have already done this once, and deleted only the operator, you can redeploy just the operator with `make redeploy-operator`.
 
 Alternatively, update image in operator.yaml to actual value of echo "$IRHOSTNAME/$NAMESPACE/hello-operator:v0.0.1"
 
@@ -360,19 +362,19 @@ Done:
 - have hello use `REPEAT` and `VERBOSE` env vars
 - have hello app handle versioning nicely, including overriding value in go file
 - have hello app check for image registry env vars
+- create make targets (and doc) to override Image registry for hello_controller.go and operator.yaml, plus maintain operator version
 
 Next:
-- look for better way to override internal registry in code. `kustomize`? Probably easier to just use sed in makefile (override before build, reset after  build even if build fails) for this simple case.
-- have hello use the repeat and verbose fields to set env vars
-- have operator apply version, repeat and verbose fields correctly.
 - convert to deployment following memcache example code here: https://docs.openshift.com/container-platform/4.6/operators/operator_sdk/osdk-getting-started.html
-- reconcile service in operator
+- have operator use the repeat and verbose cr fields to set env vars, which hello app 2.0 now uses
+- manually add validation to only allow hello app at v1.0 or v2.0
+- have operator apply version as the tag of the image correctly.
+
+- reconcile service in operator - following hello-ocp
 - repeat with new code for route
-- tidy up docs
+- add doc for what the role, role_binding and service_account yamls are for
 - move onto olm
 - have operator create a file instead of env var for one of verbose or repeat.
-
-
 
 # Appendix
 

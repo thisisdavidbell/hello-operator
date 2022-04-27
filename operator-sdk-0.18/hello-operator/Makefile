@@ -1,6 +1,6 @@
 # Makefile for operator
 
-version=v0.0.1
+version=v0.0.2
 
 .PHONY: check-registry-env-vars
 check-registry-env-vars:
@@ -10,6 +10,7 @@ check-registry-env-vars:
 		printf "  - IRNAMESPACE - namespace in image registry\n"; \
 		printf "  - IRUSER - user for image registry\n"; \
 		printf "  - IRPASSWORD - password for image registry\n"; \
+		exit 1; \
 	fi
 
 .PHONY: set-controller-registry
@@ -54,5 +55,17 @@ deploy-operator-as-is:
 	oc create -f deploy/role_binding.yaml
 	oc create -f deploy/operator.yaml
 
+.PHONY: redeploy-operator-as-is
+redeploy-operator-as-is: 
+	oc create -f deploy/operator.yaml
+
 .PHONY: deploy-operator
 deploy-operator: check-registry-env-vars set-operatoryaml-registry deploy-operator-as-is reset-operatoryaml-registry
+
+.PHONY: delete-operator-and-example-cr
+delete-operator-and-example-cr:
+	oc delete hello example-hello
+	oc delete deployment hello-operator
+
+.PHONY: redeploy-operator
+redeploy-operator: check-registry-env-vars set-operatoryaml-registry redeploy-operator-as-is reset-operatoryaml-registry

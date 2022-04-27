@@ -46,6 +46,7 @@ check-registry-env-vars:
 		printf "  - IRNAMESPACE - namespace in image registry\n"; \
 		printf "  - IRUSER - user for image registry\n"; \
 		printf "  - IRPASSWORD - password for image registry\n"; \
+		exit 1; \
 	fi
 
 .PHONY: docker-tag-and-push
