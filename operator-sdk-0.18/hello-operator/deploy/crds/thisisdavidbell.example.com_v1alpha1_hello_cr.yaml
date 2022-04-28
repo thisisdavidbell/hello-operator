@@ -5,5 +5,5 @@ metadata:
 spec:
   # Add fields here
   version: "v2.0"
-  repeat: 2
+  repeat: 3
   verbose: true

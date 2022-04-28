@@ -154,6 +154,9 @@ func newDeploymentForCR(cr *thisisdavidbellv1alpha1.Hello) *appsv1.Deployment {
 		},
 	}
 
+	// Note: currently spec.versionis a required field, so will have value. Its now an enum which only accepts valid values, so we can be confident its always valid.
+	image := "SET_TO_IRHOSTNAME/SET_TO_IRNAMESPACE/hello:" + cr.Spec.Version
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.Name,
@@ -171,7 +174,7 @@ func newDeploymentForCR(cr *thisisdavidbellv1alpha1.Hello) *appsv1.Deployment {
 					Containers: []corev1.Container{
 						{
 							Name:    "hello",
-							Image:   "SET_TO_IRHOSTNAME/SET_TO_IRNAMESPACE/hello:v2.0",
+							Image:   image,
 							Command: []string{"./hello"},
 							Env:     envs,
 						},

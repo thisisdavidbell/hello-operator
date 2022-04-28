@@ -187,7 +187,7 @@ Note that this appears to cause not changes at this point:
 c. Update the crd:
 
 ```
-operator-sdk generate k8s
+operator-sdk generate crds
 ```
 
 Note the crd gets updated to include these new types
@@ -272,7 +272,7 @@ or
 # 8. Register the crd
 
 ```
-kubectl create -f deploy/crds/thisisdavidbell.example.com_hellos_crd.yaml 
+oc create -f deploy/crds/thisisdavidbell.example.com_hellos_crd.yaml 
 ```
 Note the cluster now understands what a `Hello` kind is - you can search for objects of that type
 ```
@@ -352,9 +352,43 @@ http://hello1.drb-hello-operator.apps.RESTOFCLUSTERHOSTNAME/hello
 If you set, for example, spec.repeat to 10 in the cr yaml, you will see the validation failure:
 
 ```
-$ oc create -f deploy/crds/thisisdavidbell.example.com_v1alpha1_hello_cr.yaml  
+oc create -f deploy/crds/thisisdavidbell.example.com_v1alpha1_hello_cr.yaml  
+```
 
 The Hello "example-hello" is invalid: spec.repeat: Invalid value: 10: spec.repeat in body should be less than or equal to 5
+
+# 13. Convert hello pod to deployment
+The memcache operator example here https://docs.openshift.com/container-platform/4.6/operators/operator_sdk/osdk-getting-started.html uses a deployment. Using this example, and the go specs for deployment and pod, convert the controller code to create a deployment rather than a pod.
+- deployment: https://pkg.go.dev/k8s.io/api/apps/v1#Deployment
+- pod: https://pkg.go.dev/k8s.io/api/core/v1#PodSpec
+
+Note, this change can be seen at commit: 553b2b2: https://github.com/thisisdavidbell/hello-operator/commit/553b2b229687bf1641d7b5a2b91e6811a7c2766d
+
+# 14. Have operator create env vars for repeat and verbose
+Note with the initial hello_types.go model, verbose and repeat are required fields, therefore for now at least we can assume they always exist and have values.
+within the Reconcile loop, ensure the newly created Deployment has env vars added for the pod template.
+
+This change can be seen at commit: b7c375e: https://github.com/thisisdavidbell/hello-operator/commit/b7c375e6acea57d2bbe5988a7e083823df087e08
+
+# 15. Have operator apply spec.version for the hello image tag
+For now, we will use the OpenAPIV3Schema validation to ensure that spec.version is a valid value. (It is already a required value as we set it up initially).
+- Therefore, update hello_types.go to specify valid hello app versions as an enum for spec.version, such as v1.0 and v2.0 (this may be different for you). - - Run `operator-sdk generate crds` to update the crd with these changes
+- apply the crd again `oc apply -f deploy/crds/thisisdavidbell.example.com_hellos_crd.yaml`
+
+Next update the reconcile loop to use spec.version as the image tag.
+
+Note: for rapid development and test, make targets exist for:
+- `make build-and-push-operator` - build the operator at current version
+- `make clean-up` - delete the operator and default named hello cr
+- `make redeploy-operator` - create the operator deployment (assume service_account, role and role_binding already exist)
+- `make create-cr` - create example-hello hello cr (assume service and route already exist)
+- `curl http://hello1.drb-hello-operator.apps.RESTOFCLUSTERHOSTNAME/hello`
+
+# 16. Confirm that cr creation works as expected, but cr update has no effect
+
+- create the cr, noting the default values for version, repeat and verbose.
+- `curl http://hello1.drb-hello-operator.apps.RESTOFCLUSTERHOSTNAME/hello` should give the expected behaviour
+- update the cr in ocp to change one or more of version, repeat, verbose.
 
 ---
 
@@ -364,13 +398,13 @@ Done:
 - have hello app check for image registry env vars
 - create make targets (and doc) to override Image registry for hello_controller.go and operator.yaml, plus maintain operator version
 - convert to deployment following memcache example code here: https://docs.openshift.com/container-platform/4.6/operators/operator_sdk/osdk-getting-started.html
-
-Next:
 - update above steps to include the addition of deployment, and make targets...
 - have operator use the repeat and verbose cr fields to set env vars, which hello app 2.0 now uses
 - manually add validation to only allow hello app at v1.0 or v2.0
 - have operator apply version as the tag of the image correctly.
 
+Next:
+- support updates to cr
 - reconcile service in operator - following hello-ocp
 - repeat with new code for route
 - add doc for what the role, role_binding and service_account yamls are for

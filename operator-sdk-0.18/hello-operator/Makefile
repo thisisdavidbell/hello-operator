@@ -1,6 +1,6 @@
 # Makefile for operator
 
-version=v0.0.3
+version=v0.0.4
 
 .PHONY: check-registry-env-vars
 check-registry-env-vars:
@@ -64,8 +64,12 @@ deploy-operator: check-registry-env-vars set-operatoryaml-registry deploy-operat
 
 .PHONY: clean-up
 clean-up:
-	oc delete hello example-hello
-	oc delete deployment hello-operator
+	-oc delete hello example-hello
+	-oc delete deployment hello-operator
 
 .PHONY: redeploy-operator
 redeploy-operator: check-registry-env-vars set-operatoryaml-registry redeploy-operator-as-is reset-operatoryaml-registry
+
+.PHONY: create-cr
+create-cr: 
+	oc create -f deploy/crds/thisisdavidbell.example.com_v1alpha1_hello_cr.yaml  

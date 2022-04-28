@@ -33,7 +33,6 @@ spec:
             properties:
               repeat:
                 description: Repeat - how many times to say hello
-                format: int32
                 maximum: 5
                 minimum: 1
                 type: integer
@@ -43,8 +42,9 @@ spec:
               version:
                 description: Version - what version of hello to use - this is the
                   hello image tag to use
-                maxLength: 10
-                minLength: 2
+                enum:
+                - v1.0
+                - v2.0
                 type: string
             required:
             - repeat

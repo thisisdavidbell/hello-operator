@@ -14,8 +14,7 @@ type HelloSpec struct {
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
 	// Version - what version of hello to use - this is the hello image tag to use
-	// +kubebuilder:validation:MaxLength=10
-	// +kubebuilder:validation:MinLength=2
+	// +kubebuilder:validation:Enum=v1.0;v2.0
 	Version string `json:"version"`
 
 	// Repeat - how many times to say hello
