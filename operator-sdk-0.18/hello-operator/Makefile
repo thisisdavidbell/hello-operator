@@ -1,6 +1,6 @@
 # Makefile for operator
 
-version=v0.0.2
+version=v0.0.3
 
 .PHONY: check-registry-env-vars
 check-registry-env-vars:
@@ -62,8 +62,8 @@ redeploy-operator-as-is:
 .PHONY: deploy-operator
 deploy-operator: check-registry-env-vars set-operatoryaml-registry deploy-operator-as-is reset-operatoryaml-registry
 
-.PHONY: delete-operator-and-example-cr
-delete-operator-and-example-cr:
+.PHONY: clean-up
+clean-up:
 	oc delete hello example-hello
 	oc delete deployment hello-operator
 

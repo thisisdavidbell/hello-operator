@@ -4,6 +4,6 @@ metadata:
   name: example-hello
 spec:
   # Add fields here
-  version: "v1.0"
-  repeat: 1
+  version: "v2.0"
+  repeat: 2
   verbose: true

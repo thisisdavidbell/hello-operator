@@ -2,6 +2,7 @@ package hello
 
 import (
 	"context"
+	"strconv"
 
 	thisisdavidbellv1alpha1 "github.com/thisisdavidbell/hello-operator/operator-sdk-0.18/hello-operator/pkg/apis/thisisdavidbell/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -138,6 +139,21 @@ func newDeploymentForCR(cr *thisisdavidbellv1alpha1.Hello) *appsv1.Deployment {
 		"app": cr.Name,
 	}
 
+	// Note: currently these are required fields, so will have value int and bool values
+	repeat := strconv.Itoa(cr.Spec.Repeat)
+	verbose := strconv.FormatBool(cr.Spec.Verbose)
+
+	envs := []corev1.EnvVar{
+		{
+			Name:  "REPEAT",
+			Value: repeat,
+		},
+		{
+			Name:  "VERBOSE",
+			Value: verbose,
+		},
+	}
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.Name,
@@ -157,6 +173,7 @@ func newDeploymentForCR(cr *thisisdavidbellv1alpha1.Hello) *appsv1.Deployment {
 							Name:    "hello",
 							Image:   "SET_TO_IRHOSTNAME/SET_TO_IRNAMESPACE/hello:v2.0",
 							Command: []string{"./hello"},
+							Env:     envs,
 						},
 					},
 				},

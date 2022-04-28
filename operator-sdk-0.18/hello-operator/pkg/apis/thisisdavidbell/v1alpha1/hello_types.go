@@ -21,7 +21,7 @@ type HelloSpec struct {
 	// Repeat - how many times to say hello
 	// +kubebuilder:validation:Maximum=5
 	// +kubebuilder:validation:Minimum=1
-	Repeat int32 `json:"repeat"`
+	Repeat int `json:"repeat"`
 
 	// Verbose - whether to output additional line of text
 	Verbose bool `json:"verbose"`

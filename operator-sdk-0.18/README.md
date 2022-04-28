@@ -363,9 +363,10 @@ Done:
 - have hello app handle versioning nicely, including overriding value in go file
 - have hello app check for image registry env vars
 - create make targets (and doc) to override Image registry for hello_controller.go and operator.yaml, plus maintain operator version
+- convert to deployment following memcache example code here: https://docs.openshift.com/container-platform/4.6/operators/operator_sdk/osdk-getting-started.html
 
 Next:
-- convert to deployment following memcache example code here: https://docs.openshift.com/container-platform/4.6/operators/operator_sdk/osdk-getting-started.html
+- update above steps to include the addition of deployment, and make targets...
 - have operator use the repeat and verbose cr fields to set env vars, which hello app 2.0 now uses
 - manually add validation to only allow hello app at v1.0 or v2.0
 - have operator apply version as the tag of the image correctly.
@@ -373,6 +374,7 @@ Next:
 - reconcile service in operator - following hello-ocp
 - repeat with new code for route
 - add doc for what the role, role_binding and service_account yamls are for
+- add field for the url endpoint to call
 - move onto olm
 - have operator create a file instead of env var for one of verbose or repeat.
 
