@@ -89,8 +89,8 @@ func (r *ReconcileHello) Reconcile(request reconcile.Request) (reconcile.Result,
 	reqLogger.Info("Reconciling Hello")
 
 	// Fetch the Hello instance
-	instance := &thisisdavidbellv1alpha1.Hello{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	helloInstance := &thisisdavidbellv1alpha1.Hello{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, helloInstance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -103,16 +103,16 @@ func (r *ReconcileHello) Reconcile(request reconcile.Request) (reconcile.Result,
 	}
 
 	// Define a new Deployment Object
-	deployment := newDeploymentForCR(instance)
+	deployment := newDeploymentForCR(helloInstance)
 
 	// Set Hello instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, deployment, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(helloInstance, deployment, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Check if this Deployment already exists
-	found := &appsv1.Deployment{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, found)
+	foundDeployment := &appsv1.Deployment{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, foundDeployment)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 		err = r.client.Create(context.TODO(), deployment)
@@ -127,8 +127,24 @@ func (r *ReconcileHello) Reconcile(request reconcile.Request) (reconcile.Result,
 		return reconcile.Result{}, err
 	}
 
-	// Deployment already exists - nothing to do - don't requeue. Note we are not checking anything about it, so it might have changed, but we ignore this case for now.
-	reqLogger.Info("Skip reconcile: Deployment already exists", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
+	// Deployment already exists
+	reqLogger.Info("Skip reconcile: Deployment already exists", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
+
+	// Ensure hello app version is correct
+	desiredImage := getHelloImage(helloInstance)
+	foundImage := foundDeployment.Spec.Template.Spec.Containers[0].Image
+
+	if desiredImage != foundImage {
+		foundDeployment.Spec.Template.Spec.Containers[0].Image = desiredImage
+		err = r.client.Update(context.TODO(), foundDeployment)
+		if err != nil {
+			log.Error(err, "Failed to update hello image in Deployment", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
+			return reconcile.Result{}, err
+		}
+		// Deployment spec updated - return and requeue
+		return reconcile.Result{Requeue: true}, nil
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -155,7 +171,7 @@ func newDeploymentForCR(cr *thisisdavidbellv1alpha1.Hello) *appsv1.Deployment {
 	}
 
 	// Note: currently spec.versionis a required field, so will have value. Its now an enum which only accepts valid values, so we can be confident its always valid.
-	image := "SET_TO_IRHOSTNAME/SET_TO_IRNAMESPACE/hello:" + cr.Spec.Version
+	image := getHelloImage(cr)
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -183,4 +199,8 @@ func newDeploymentForCR(cr *thisisdavidbellv1alpha1.Hello) *appsv1.Deployment {
 			},
 		},
 	}
+}
+
+func getHelloImage(cr *thisisdavidbellv1alpha1.Hello) string {
+	return "SET_TO_IRHOSTNAME/SET_TO_IRNAMESPACE/hello:" + cr.Spec.Version
 }

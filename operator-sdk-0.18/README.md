@@ -323,6 +323,11 @@ spec:
 Route:
 Main details:
 ```
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hello1-route
+  namespace: drb-hello-operator
 spec:
   host: hello1.drb-hello-operator.apps.RESTOFCLUSTERHOSTNAME
   path: /hello
@@ -384,11 +389,16 @@ Note: for rapid development and test, make targets exist for:
 - `make create-cr` - create example-hello hello cr (assume service and route already exist)
 - `curl http://hello1.drb-hello-operator.apps.RESTOFCLUSTERHOSTNAME/hello`
 
+This change can be seen at commit: 4433101: https://github.com/thisisdavidbell/hello-operator/commit/44331014e4c1f18e6a3212f50d3d9d6a925a660d
+
 # 16. Confirm that cr creation works as expected, but cr update has no effect
 
 - create the cr, noting the default values for version, repeat and verbose.
 - `curl http://hello1.drb-hello-operator.apps.RESTOFCLUSTERHOSTNAME/hello` should give the expected behaviour
 - update the cr in ocp to change one or more of version, repeat, verbose.
+
+# 17. Support changes to spec.version hello CR.
+Apply logic in reconcile loop to find desired (from cr) and current deployed (from deployment, and thus from pod) image value. If these don't match, update the deployments image value, and update.
 
 ---
 
@@ -405,10 +415,11 @@ Done:
 
 Next:
 - support updates to cr
+- update operator log messages
 - reconcile service in operator - following hello-ocp
-- repeat with new code for route
+- repeat with new code for route (can specify path but not host
 - add doc for what the role, role_binding and service_account yamls are for
-- add field for the url endpoint to call
+- add field for the url endpoint to call - can get from route afte created, a re-reconcile
 - move onto olm
 - have operator create a file instead of env var for one of verbose or repeat.
 
