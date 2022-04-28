@@ -2,6 +2,7 @@ package hello
 
 import (
 	"context"
+	"reflect"
 	"strconv"
 
 	thisisdavidbellv1alpha1 "github.com/thisisdavidbell/hello-operator/operator-sdk-0.18/hello-operator/pkg/apis/thisisdavidbell/v1alpha1"
@@ -128,17 +129,30 @@ func (r *ReconcileHello) Reconcile(request reconcile.Request) (reconcile.Result,
 	}
 
 	// Deployment already exists
-	reqLogger.Info("Skip reconcile: Deployment already exists", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
+	reqLogger.Info("Deployment already exists", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
 
 	// Ensure hello app version is correct
 	desiredImage := getHelloImage(helloInstance)
 	foundImage := foundDeployment.Spec.Template.Spec.Containers[0].Image
-
 	if desiredImage != foundImage {
 		foundDeployment.Spec.Template.Spec.Containers[0].Image = desiredImage
 		err = r.client.Update(context.TODO(), foundDeployment)
 		if err != nil {
 			log.Error(err, "Failed to update hello image in Deployment", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
+			return reconcile.Result{}, err
+		}
+		// Deployment spec updated - return and requeue
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	// Ensure repeat and verbose env vars are correct
+	desiredEnvVars := getPodEnvVars(helloInstance)
+	foundEnvVars := foundDeployment.Spec.Template.Spec.Containers[0].Env
+	if !reflect.DeepEqual(desiredEnvVars, foundEnvVars) {
+		foundDeployment.Spec.Template.Spec.Containers[0].Env = desiredEnvVars
+		err = r.client.Update(context.TODO(), foundDeployment)
+		if err != nil {
+			log.Error(err, "Failed to update pod env vars in Deployment", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
 			return reconcile.Result{}, err
 		}
 		// Deployment spec updated - return and requeue
@@ -155,22 +169,9 @@ func newDeploymentForCR(cr *thisisdavidbellv1alpha1.Hello) *appsv1.Deployment {
 		"app": cr.Name,
 	}
 
-	// Note: currently these are required fields, so will have value int and bool values
-	repeat := strconv.Itoa(cr.Spec.Repeat)
-	verbose := strconv.FormatBool(cr.Spec.Verbose)
+	envs := getPodEnvVars(cr)
 
-	envs := []corev1.EnvVar{
-		{
-			Name:  "REPEAT",
-			Value: repeat,
-		},
-		{
-			Name:  "VERBOSE",
-			Value: verbose,
-		},
-	}
-
-	// Note: currently spec.versionis a required field, so will have value. Its now an enum which only accepts valid values, so we can be confident its always valid.
+	// Note: currently spec.version is a required field, so will have value. Its now an enum which only accepts valid values, so we can be confident its always valid.
 	image := getHelloImage(cr)
 
 	return &appsv1.Deployment{
@@ -203,4 +204,22 @@ func newDeploymentForCR(cr *thisisdavidbellv1alpha1.Hello) *appsv1.Deployment {
 
 func getHelloImage(cr *thisisdavidbellv1alpha1.Hello) string {
 	return "SET_TO_IRHOSTNAME/SET_TO_IRNAMESPACE/hello:" + cr.Spec.Version
+}
+
+func getPodEnvVars(cr *thisisdavidbellv1alpha1.Hello) []corev1.EnvVar {
+
+	// Note: currently these are required fields, so will exist and will have valid int and bool values
+	repeat := strconv.Itoa(cr.Spec.Repeat)
+	verbose := strconv.FormatBool(cr.Spec.Verbose)
+
+	return []corev1.EnvVar{
+		{
+			Name:  "REPEAT",
+			Value: repeat,
+		},
+		{
+			Name:  "VERBOSE",
+			Value: verbose,
+		},
+	}
 }

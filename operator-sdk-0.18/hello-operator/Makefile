@@ -1,6 +1,6 @@
 # Makefile for operator
 
-version=v0.0.4
+version=v0.0.5
 
 .PHONY: check-registry-env-vars
 check-registry-env-vars:

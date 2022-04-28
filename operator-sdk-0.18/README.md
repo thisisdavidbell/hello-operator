@@ -397,8 +397,13 @@ This change can be seen at commit: 4433101: https://github.com/thisisdavidbell/h
 - `curl http://hello1.drb-hello-operator.apps.RESTOFCLUSTERHOSTNAME/hello` should give the expected behaviour
 - update the cr in ocp to change one or more of version, repeat, verbose.
 
-# 17. Support changes to spec.version hello CR.
-Apply logic in reconcile loop to find desired (from cr) and current deployed (from deployment, and thus from pod) image value. If these don't match, update the deployments image value, and update.
+# 17. Support changes to spec.version in existing hello CR.
+Apply logic in reconcile loop to find desired (from cr) and current deployed (from deployment, and thus from pod) image value. If these don't match, update the deployment's image value, and update.
+
+This change can be seen at commit: 5cc8494 : https://github.com/thisisdavidbell/hello-operator/commit/5cc8494b31ceed09ef4458a1d358c12f99ed6536
+
+# 18. Support changes to spec.repeat and spec.verbose in existing hello CR.
+Apply logic in reconcile loop to find desired (from cr) and current deployed (from deployment, and thus from pod) env list. If these don't match, update the deployment's env list, and update.
 
 ---
 
@@ -412,9 +417,9 @@ Done:
 - have operator use the repeat and verbose cr fields to set env vars, which hello app 2.0 now uses
 - manually add validation to only allow hello app at v1.0 or v2.0
 - have operator apply version as the tag of the image correctly.
+- support updates to cr
 
 Next:
-- support updates to cr
 - update operator log messages
 - reconcile service in operator - following hello-ocp
 - repeat with new code for route (can specify path but not host
