@@ -367,17 +367,24 @@ The memcache operator example here https://docs.openshift.com/container-platform
 - deployment: https://pkg.go.dev/k8s.io/api/apps/v1#Deployment
 - pod: https://pkg.go.dev/k8s.io/api/core/v1#PodSpec
 
-Note, this change can be seen at commit: 553b2b2: https://github.com/thisisdavidbell/hello-operator/commit/553b2b229687bf1641d7b5a2b91e6811a7c2766d
+Note, this change can be seen at commit: [553b2b2](https://github.com/thisisdavidbell/hello-operator/commit/553b2b229687bf1641d7b5a2b91e6811a7c2766d)
 
 # 14. Have operator create env vars for repeat and verbose
 Note with the initial hello_types.go model, verbose and repeat are required fields, therefore for now at least we can assume they always exist and have values.
 within the Reconcile loop, ensure the newly created Deployment has env vars added for the pod template.
 
-This change can be seen at commit: b7c375e: https://github.com/thisisdavidbell/hello-operator/commit/b7c375e6acea57d2bbe5988a7e083823df087e08
+This change can be seen at commit: [b7c375e](https://github.com/thisisdavidbell/hello-operator/commit/b7c375e6acea57d2bbe5988a7e083823df087e08)
 
 # 15. Have operator apply spec.version for the hello image tag
 For now, we will use the OpenAPIV3Schema validation to ensure that spec.version is a valid value. (It is already a required value as we set it up initially).
-- Therefore, update hello_types.go to specify valid hello app versions as an enum for spec.version, such as v1.0 and v2.0 (this may be different for you). - - Run `operator-sdk generate crds` to update the crd with these changes
+- Therefore, update hello_types.go to specify valid hello app versions as an enum for spec.version, such as v1.0 and v2.0 (this may be different for you).
+e.g.:
+```
+	// Version - what version of hello to use - this is the hello image tag to use
+	// +kubebuilder:validation:Enum=v1.0;v2.0
+	Version string `json:"version"`
+  ```
+- Run `operator-sdk generate crds` to update the crd with these changes
 - apply the crd again `oc apply -f deploy/crds/thisisdavidbell.example.com_hellos_crd.yaml`
 
 Next update the reconcile loop to use spec.version as the image tag.
@@ -385,11 +392,11 @@ Next update the reconcile loop to use spec.version as the image tag.
 Note: for rapid development and test, make targets exist for:
 - `make build-and-push-operator` - build the operator at current version
 - `make clean-up` - delete the operator and default named hello cr
-- `make redeploy-operator` - create the operator deployment (assume service_account, role and role_binding already exist)
+- `make redeploy-operator` - create the operator deployment (assuming service_account, role and role_binding already exist)
 - `make create-cr` - create example-hello hello cr (assume service and route already exist)
 - `curl http://hello1.drb-hello-operator.apps.RESTOFCLUSTERHOSTNAME/hello`
 
-This change can be seen at commit: 4433101: https://github.com/thisisdavidbell/hello-operator/commit/44331014e4c1f18e6a3212f50d3d9d6a925a660d
+This change can be seen at commit: [4433101](https://github.com/thisisdavidbell/hello-operator/commit/44331014e4c1f18e6a3212f50d3d9d6a925a660d)
 
 # 16. Confirm that cr creation works as expected, but cr update has no effect
 
@@ -400,33 +407,31 @@ This change can be seen at commit: 4433101: https://github.com/thisisdavidbell/h
 # 17. Support changes to spec.version in existing hello CR.
 Apply logic in reconcile loop to find desired (from cr) and current deployed (from deployment, and thus from pod) image value. If these don't match, update the deployment's image value, and update.
 
-This change can be seen at commit: 5cc8494 : https://github.com/thisisdavidbell/hello-operator/commit/5cc8494b31ceed09ef4458a1d358c12f99ed6536
+This change can be seen at commit: [5cc8494](https://github.com/thisisdavidbell/hello-operator/commit/5cc8494b31ceed09ef4458a1d358c12f99ed6536)
 
 # 18. Support changes to spec.repeat and spec.verbose in existing hello CR.
 Apply logic in reconcile loop to find desired (from cr) and current deployed (from deployment, and thus from pod) env list. If these don't match, update the deployment's env list, and update.
 
+This change can be seen at commit: [53d6a68](https://github.com/thisisdavidbell/hello-operator/commit/53d6a684d3af88c296dd9d106ec0f89beb3aa3a4)
+
+# 19. Update operator log messages
+At this point I added a few extra operator log messages in `Reconcile()` were helpful when seeing which path the Reconcile code went down each time.
+
+# 20. Reconcile the Service
+Next we add the creation and reconciling of the Service needed to access to hello endpoint.
+
+
 ---
 
 Done:
-- have hello use `REPEAT` and `VERBOSE` env vars
-- have hello app handle versioning nicely, including overriding value in go file
-- have hello app check for image registry env vars
-- create make targets (and doc) to override Image registry for hello_controller.go and operator.yaml, plus maintain operator version
-- convert to deployment following memcache example code here: https://docs.openshift.com/container-platform/4.6/operators/operator_sdk/osdk-getting-started.html
-- update above steps to include the addition of deployment, and make targets...
-- have operator use the repeat and verbose cr fields to set env vars, which hello app 2.0 now uses
-- manually add validation to only allow hello app at v1.0 or v2.0
-- have operator apply version as the tag of the image correctly.
-- support updates to cr
+- update operator log messages
 
 Next:
-- update operator log messages
 - reconcile service in operator - following hello-ocp
 - repeat with new code for route (can specify path but not host
 - add doc for what the role, role_binding and service_account yamls are for
-- add field for the url endpoint to call - can get from route afte created, a re-reconcile
+- add field for the url endpoint to call - can get from route after created, a re-reconcile
 - move onto olm
-- have operator create a file instead of env var for one of verbose or repeat.
 
 # Appendix
 

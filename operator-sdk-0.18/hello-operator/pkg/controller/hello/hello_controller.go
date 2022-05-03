@@ -122,26 +122,30 @@ func (r *ReconcileHello) Reconcile(request reconcile.Request) (reconcile.Result,
 		}
 
 		// Deployment created successfully - don't requeue
+		reqLogger.Info("Successfully created deployment. Reconcile complete.", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 		return reconcile.Result{}, nil
+		// NOTE: I think this will need to be a requeue when we reconcile service...
 	} else if err != nil {
 		// get deployment failed, and not with NotFound
 		return reconcile.Result{}, err
 	}
 
 	// Deployment already exists
-	reqLogger.Info("Deployment already exists", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
+	reqLogger.Info("Deployment already exists. Check state matches desired...", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
 
 	// Ensure hello app version is correct
 	desiredImage := getHelloImage(helloInstance)
 	foundImage := foundDeployment.Spec.Template.Spec.Containers[0].Image
 	if desiredImage != foundImage {
+		reqLogger.Info("Hello image version mismatch found.", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 		foundDeployment.Spec.Template.Spec.Containers[0].Image = desiredImage
 		err = r.client.Update(context.TODO(), foundDeployment)
 		if err != nil {
-			log.Error(err, "Failed to update hello image in Deployment", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
+			log.Error(err, "Failed to update hello image version in deployment", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
 			return reconcile.Result{}, err
 		}
 		// Deployment spec updated - return and requeue
+		reqLogger.Info("Successfully updated hello image version. Requeue to continue.", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 		return reconcile.Result{Requeue: true}, nil
 	}
 
@@ -149,16 +153,21 @@ func (r *ReconcileHello) Reconcile(request reconcile.Request) (reconcile.Result,
 	desiredEnvVars := getPodEnvVars(helloInstance)
 	foundEnvVars := foundDeployment.Spec.Template.Spec.Containers[0].Env
 	if !reflect.DeepEqual(desiredEnvVars, foundEnvVars) {
+		reqLogger.Info("Env vars mismatch found.", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 		foundDeployment.Spec.Template.Spec.Containers[0].Env = desiredEnvVars
 		err = r.client.Update(context.TODO(), foundDeployment)
 		if err != nil {
-			log.Error(err, "Failed to update pod env vars in Deployment", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
+			log.Error(err, "Failed to update env vars in deployment", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
 			return reconcile.Result{}, err
 		}
 		// Deployment spec updated - return and requeue
+		reqLogger.Info("Successfully updated env vars. Requeue to continue.", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
+
 		return reconcile.Result{Requeue: true}, nil
 	}
 
+	// got to end. Reconcile completed and was successful.
+	reqLogger.Info("End of successful Reconcile.", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 	return reconcile.Result{}, nil
 }
 
