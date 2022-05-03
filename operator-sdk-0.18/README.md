@@ -420,6 +420,8 @@ At this point I added a few extra operator log messages in `Reconcile()` were he
 # 20. Reconcile the Service
 Next we add the creation and reconciling of the Service needed to access to hello endpoint.
 
+- In order to keep the reconcile loop readable, start by moving the reconcile of the deployment to its own function `reconcileDeployment`.
+   - This change can be seen at a commit: []()
 
 ---
 

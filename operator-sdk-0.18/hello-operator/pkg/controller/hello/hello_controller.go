@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/go-logr/logr"
 	thisisdavidbellv1alpha1 "github.com/thisisdavidbell/hello-operator/operator-sdk-0.18/hello-operator/pkg/apis/thisisdavidbell/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -97,12 +98,26 @@ func (r *ReconcileHello) Reconcile(request reconcile.Request) (reconcile.Result,
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
+			reqLogger.Info("Hello cr not found. Presume deleted. Reconcile complete.")
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
+	result, err := reconcileDeployment(helloInstance, r, reqLogger)
+	if err != nil || result.Requeue == true {
+		// reconcile requested requeue or errored, so requeue
+		return result, err
+	}
+
+	// got to end. Reconcile completed and was successful.
+	reqLogger.Info("End of successful Reconcile.")
+	return reconcile.Result{}, nil
+}
+
+// reconcileDeployment creates or updates the k8s deployment based on the cr.
+func reconcileDeployment(helloInstance *thisisdavidbellv1alpha1.Hello, r *ReconcileHello, reqLogger logr.Logger) (reconcile.Result, error) {
 	// Define a new Deployment Object
 	deployment := newDeploymentForCR(helloInstance)
 
@@ -113,7 +128,7 @@ func (r *ReconcileHello) Reconcile(request reconcile.Request) (reconcile.Result,
 
 	// Check if this Deployment already exists
 	foundDeployment := &appsv1.Deployment{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, foundDeployment)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, foundDeployment)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 		err = r.client.Create(context.TODO(), deployment)
@@ -121,10 +136,9 @@ func (r *ReconcileHello) Reconcile(request reconcile.Request) (reconcile.Result,
 			return reconcile.Result{}, err
 		}
 
-		// Deployment created successfully - don't requeue
+		// Deployment created successfully - requeue
 		reqLogger.Info("Successfully created deployment. Reconcile complete.", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
-		return reconcile.Result{}, nil
-		// NOTE: I think this will need to be a requeue when we reconcile service...
+		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
 		// get deployment failed, and not with NotFound
 		return reconcile.Result{}, err
@@ -166,8 +180,7 @@ func (r *ReconcileHello) Reconcile(request reconcile.Request) (reconcile.Result,
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	// got to end. Reconcile completed and was successful.
-	reqLogger.Info("End of successful Reconcile.", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
+	// deployment successfully reconciled. Continue Reconcile() loop
 	return reconcile.Result{}, nil
 }
 
