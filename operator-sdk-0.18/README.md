@@ -417,11 +417,29 @@ This change can be seen at commit: [53d6a68](https://github.com/thisisdavidbell/
 # 19. Update operator log messages
 At this point I added a few extra operator log messages in `Reconcile()` were helpful when seeing which path the Reconcile code went down each time.
 
+Note: after every one of these steps you should continue to build, deploy and test, i.e.:
+- `make build-and-push-operator` - build the operator at current version
+- `make clean-up` - delete the operator and default named hello cr
+- `make redeploy-operator` - create the operator deployment (assuming service_account, role and role_binding already exist)
+- `make create-cr` - create example-hello hello cr (assume service and route already exist)
+- `curl http://hello1.drb-hello-operator.apps.RESTOFCLUSTERHOSTNAME/hello`
+
 # 20. Reconcile the Service
 Next we add the creation and reconciling of the Service needed to access to hello endpoint.
 
 - In order to keep the reconcile loop readable, start by moving the reconcile of the deployment to its own function `reconcileDeployment`.
-   - This change can be seen at a commit: []()
+   - This change can be seen at a commit: [c79a36b](https://github.com/thisisdavidbell/hello-operator/commit/c79a36b0cd5edf5b2831e50526dd1eba371002d4)
+- NEXT: Reconcile the service:
+  - look at the service object spec:
+    - view the service object spec doc
+    - view an example service running in OCP
+    - view the example service we created earlier.
+  - Applying the same approach as used for the deployment, construct the reconcile logic:
+    - create a method which contructs a service object as it should be.
+    - check if the service already exists
+      - create if not
+      - for now this is enough - we could later validate the service matches, in case someone changes the service manually...
+      
 
 ---
 
